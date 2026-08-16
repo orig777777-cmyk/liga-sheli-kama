@@ -21,28 +21,14 @@ export const adminLogin = createServerFn({ method: "POST" })
   .inputValidator((data: { username: string; password: string }) => data)
   .handler(async ({ data }) => {
     const db = await admin();
-    const { data: row } = await db
-      .from("admin_users")
-      .select("username,password_hash")
-      .eq("username", data.username.trim().toLowerCase())
-      .maybeSingle();
-    if (!row) return { ok: false as const };
-    const { data: check } = await db.rpc("verify_admin_password" as never, {} as never);
-    void check;
-    const { data: match } = await db
-      .from("admin_users")
-      .select("username")
-      .eq("username", row.username)
-      .filter("password_hash", "eq", row.password_hash)
-      .maybeSingle();
-    void match;
-    const crypto = await import("bcryptjs");
-    const valid = await crypto.compare(data.password, row.password_hash);
-    if (!valid || !safeEqual(row.username, data.username.trim().toLowerCase())) {
-      return { ok: false as const };
-    }
+    const username = data.username.trim().toLowerCase();
+    const { data: valid, error } = await db.rpc("verify_admin_login", {
+      _username: username,
+      _password: data.password,
+    });
+    if (error || !valid) return { ok: false as const };
     const session = await getSession();
-    await session.update({ isAdmin: true, username: row.username });
+    await session.update({ isAdmin: true, username });
     return { ok: true as const };
   });
 
