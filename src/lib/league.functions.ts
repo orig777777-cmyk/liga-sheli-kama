@@ -7,7 +7,6 @@ import {
   loadLeague,
   requireAdmin,
   roundRobin,
-  safeEqual,
 } from "./league.server";
 
 export const getLeague = createServerFn({ method: "GET" }).handler(async () => loadLeague());
