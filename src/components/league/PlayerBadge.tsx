@@ -1,6 +1,12 @@
 import type { Player } from "@/lib/league-utils";
 
-export function PlayerBadge({ player, compact }: { player?: Player; compact?: boolean }) {
+export function PlayerBadge({
+  player,
+  compact,
+}: {
+  player: Player | undefined;
+  compact?: boolean;
+}) {
   if (!player) return <span className="text-muted-foreground">—</span>;
   return (
     <div className="flex items-center gap-2">
