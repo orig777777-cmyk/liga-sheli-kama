@@ -33,7 +33,7 @@ export const Route = createFileRoute("/admin")({
       },
     ],
   }),
-  component: AdminPage;
+  component: AdminPage,
 });
 
 const inputClass =
