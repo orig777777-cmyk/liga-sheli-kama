@@ -1,6 +1,6 @@
 import { useSession } from "@tanstack/react-start/server";
 
-import type { Match, Player, StatRow } from "./league-utils";
+import type { Match, Player, SquadPlayer, SquadStatRow, StatRow } from "./league-utils";
 
 export { computeStandings, roundRobin } from "./league-utils";
 
