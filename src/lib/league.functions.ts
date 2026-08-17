@@ -77,6 +77,7 @@ export const saveMatchResult = createServerFn({ method: "POST" })
       awayScore: number;
       completed: boolean;
       stats: { player_id: string; goals: number; assists: number }[];
+      squadStats?: { squad_player_id: string; goals: number; assists: number }[];
     }) => data,
   )
   .handler(async ({ data }) => {
@@ -105,6 +106,46 @@ export const saveMatchResult = createServerFn({ method: "POST" })
       const { error: statErr } = await db.from("match_stats").insert(rows);
       if (statErr) throw new Error(statErr.message);
     }
+
+    await db.from("squad_match_stats").delete().eq("match_id", data.matchId);
+    const squadRows = (data.squadStats ?? [])
+      .filter((s) => s.goals > 0 || s.assists > 0)
+      .map((s) => ({
+        match_id: data.matchId,
+        squad_player_id: s.squad_player_id,
+        goals: s.goals,
+        assists: s.assists,
+      }));
+    if (squadRows.length) {
+      const { error: sqErr } = await db.from("squad_match_stats").insert(squadRows);
+      if (sqErr) throw new Error(sqErr.message);
+    }
+    return { ok: true as const };
+  });
+
+export const saveSquadPlayer = createServerFn({ method: "POST" })
+  .inputValidator((data: { id?: string; name: string; team_id: string }) => data)
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const db = await admin();
+    const payload = { name: data.name.trim(), team_id: data.team_id };
+    if (data.id) {
+      const { error } = await db.from("squad_players").update(payload).eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await db.from("squad_players").insert(payload);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true as const };
+  });
+
+export const deleteSquadPlayer = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const db = await admin();
+    const { error } = await db.from("squad_players").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
     return { ok: true as const };
   });
 
