@@ -40,7 +40,8 @@ function Home() {
 
   const players = data?.players ?? [];
   const matches = data?.matches ?? [];
-  const stats = data?.stats ?? [];
+  const squadPlayers = data?.squadPlayers ?? [];
+  const squadStats = data?.squadStats ?? [];
   const hasPlayoffs = matches.some((m) => m.phase !== "regular");
 
   return (
@@ -109,7 +110,7 @@ function Home() {
               />
             </div>
           )}
-          {tab === "leaders" && <Leaderboards players={players} stats={stats} />}
+          {tab === "leaders" && <Leaderboards players={players} squadPlayers={squadPlayers} squadStats={squadStats} />}
           {tab === "fixtures" && <FixturesList players={players} matches={matches} />}
         </div>
       )}
