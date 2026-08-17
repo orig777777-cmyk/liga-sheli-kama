@@ -149,6 +149,74 @@ export type Database = {
         }
         Relationships: []
       }
+      squad_match_stats: {
+        Row: {
+          assists: number
+          goals: number
+          id: string
+          match_id: string
+          squad_player_id: string
+        }
+        Insert: {
+          assists?: number
+          goals?: number
+          id?: string
+          match_id: string
+          squad_player_id: string
+        }
+        Update: {
+          assists?: number
+          goals?: number
+          id?: string
+          match_id?: string
+          squad_player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_match_stats_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "squad_match_stats_squad_player_id_fkey"
+            columns: ["squad_player_id"]
+            isOneToOne: false
+            referencedRelation: "squad_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      squad_players: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

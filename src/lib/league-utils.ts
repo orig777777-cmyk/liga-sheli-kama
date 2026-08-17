@@ -137,3 +137,38 @@ export function leaderboard(
     .filter((r) => r.total > 0)
     .sort((a, b) => b.total - a.total);
 }
+
+export type SquadPlayer = {
+  id: string;
+  team_id: string;
+  name: string;
+};
+
+export type SquadStatRow = {
+  id: string;
+  match_id: string;
+  squad_player_id: string;
+  goals: number;
+  assists: number;
+};
+
+export function squadLeaderboard(
+  squadPlayers: SquadPlayer[],
+  teams: Player[],
+  stats: SquadStatRow[],
+  key: "goals" | "assists",
+): { squadPlayer: SquadPlayer; team: Player | undefined; total: number }[] {
+  const totals = new Map<string, number>();
+  for (const s of stats) {
+    totals.set(s.squad_player_id, (totals.get(s.squad_player_id) ?? 0) + s[key]);
+  }
+  const teamById = new Map(teams.map((t) => [t.id, t]));
+  return squadPlayers
+    .map((squadPlayer) => ({
+      squadPlayer,
+      team: teamById.get(squadPlayer.team_id),
+      total: totals.get(squadPlayer.id) ?? 0,
+    }))
+    .filter((r) => r.total > 0)
+    .sort((a, b) => b.total - a.total);
+}

@@ -1,5 +1,9 @@
-import { leaderboard, type Player, type StatRow } from "@/lib/league-utils";
-import { PlayerBadge } from "./PlayerBadge";
+import {
+  squadLeaderboard,
+  type Player,
+  type SquadPlayer,
+  type SquadStatRow,
+} from "@/lib/league-utils";
 
 function Board({
   title,
@@ -9,7 +13,7 @@ function Board({
 }: {
   title: string;
   subtitle: string;
-  rows: { player: Player; total: number }[];
+  rows: { squadPlayer: SquadPlayer; team: Player | undefined; total: number }[];
   unit: string;
 }) {
   return (
@@ -24,7 +28,7 @@ function Board({
         <ol className="space-y-2">
           {rows.map((row, i) => (
             <li
-              key={row.player.id}
+              key={row.squadPlayer.id}
               className="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-3 py-2 transition-colors hover:bg-secondary/70"
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -33,7 +37,12 @@ function Board({
                 >
                   {i + 1}
                 </span>
-                <PlayerBadge player={row.player} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold">{row.squadPlayer.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {row.team ? `${row.team.name} · ${row.team.team_name}` : "ללא קבוצה"}
+                  </p>
+                </div>
               </div>
               <span className="shrink-0 text-sm font-extrabold text-primary">
                 {row.total} {unit}
@@ -46,19 +55,27 @@ function Board({
   );
 }
 
-export function Leaderboards({ players, stats }: { players: Player[]; stats: StatRow[] }) {
+export function Leaderboards({
+  players,
+  squadPlayers,
+  squadStats,
+}: {
+  players: Player[];
+  squadPlayers: SquadPlayer[];
+  squadStats: SquadStatRow[];
+}) {
   return (
     <div className="grid gap-5 md:grid-cols-2">
       <Board
         title="מלך השערים"
-        subtitle="סך כל השערים שנרשמו בליגה"
-        rows={leaderboard(players, stats, "goals")}
+        subtitle="שערים של שחקנים בודדים לפי הקבוצה שלהם"
+        rows={squadLeaderboard(squadPlayers, players, squadStats, "goals")}
         unit="שערים"
       />
       <Board
         title="מלך הבישולים"
-        subtitle="סך כל הבישולים שנרשמו בליגה"
-        rows={leaderboard(players, stats, "assists")}
+        subtitle="בישולים של שחקנים בודדים לפי הקבוצה שלהם"
+        rows={squadLeaderboard(squadPlayers, players, squadStats, "assists")}
         unit="בישולים"
       />
     </div>

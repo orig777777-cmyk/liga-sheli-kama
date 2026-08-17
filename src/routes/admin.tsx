@@ -14,8 +14,16 @@ import {
   getAdminStatus,
   getLeague,
   savePlayer,
+  saveSquadPlayer,
+  deleteSquadPlayer,
 } from "@/lib/league.functions";
-import { PHASE_LABELS, type Match, type Player } from "@/lib/league-utils";
+import {
+  PHASE_LABELS,
+  type Match,
+  type Player,
+  type SquadPlayer,
+  type SquadStatRow,
+} from "@/lib/league-utils";
 import { saveMatchResult } from "@/lib/league.functions";
 
 export const Route = createFileRoute("/admin")({
@@ -123,6 +131,8 @@ function Dashboard() {
   const players = data?.players ?? [];
   const matches = data?.matches ?? [];
   const stats = data?.stats ?? [];
+  const squadPlayers = data?.squadPlayers ?? [];
+  const squadStats = data?.squadStats ?? [];
 
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["league"] });
@@ -195,7 +205,15 @@ function Dashboard() {
       </section>
 
       <PlayersSection players={players} onChanged={refresh} />
-      <MatchesSection players={players} matches={matches} stats={stats} onChanged={refresh} />
+      <SquadSection players={players} squadPlayers={squadPlayers} onChanged={refresh} />
+      <MatchesSection
+        players={players}
+        matches={matches}
+        stats={stats}
+        squadPlayers={squadPlayers}
+        squadStats={squadStats}
+        onChanged={refresh}
+      />
     </main>
   );
 }
@@ -319,15 +337,157 @@ function PlayersSection({ players, onChanged }: { players: Player[]; onChanged: 
   );
 }
 
+function SquadSection({
+  players,
+  squadPlayers,
+  onChanged,
+}: {
+  players: Player[];
+  squadPlayers: SquadPlayer[];
+  onChanged: () => void;
+}) {
+  const [editing, setEditing] = useState<SquadPlayer | null>(null);
+  const [name, setName] = useState("");
+  const [teamId, setTeamId] = useState("");
+
+  const reset = () => {
+    setEditing(null);
+    setName("");
+    setTeamId("");
+  };
+
+  const save = useMutation({
+    mutationFn: () =>
+      saveSquadPlayer({
+        data: { ...(editing ? { id: editing.id } : {}), name, team_id: teamId },
+      }),
+    onSuccess: () => {
+      toast.success(editing ? "השחקן עודכן" : "השחקן נוסף לסגל");
+      reset();
+      onChanged();
+    },
+    onError: () => toast.error("השמירה נכשלה"),
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => deleteSquadPlayer({ data: { id } }),
+    onSuccess: () => {
+      toast.success("השחקן נמחק");
+      onChanged();
+    },
+    onError: () => toast.error("המחיקה נכשלה"),
+  });
+
+  const teamById = new Map(players.map((p) => [p.id, p]));
+
+  return (
+    <section className="surface-card space-y-5 p-6">
+      <div>
+        <h2 className="font-display text-2xl tracking-wide">ניהול שחקני סגל (מלך שערים ובישולים)</h2>
+        <p className="text-xs text-muted-foreground">
+          שחקנים בודדים משויכים לקבוצה בליגה ומופיעים רק בטבלאות המובילים — לא בטבלת הליגה.
+        </p>
+      </div>
+
+      <form
+        className="grid gap-3 md:grid-cols-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!teamId) {
+            toast.error("יש לבחור קבוצה");
+            return;
+          }
+          save.mutate();
+        }}
+      >
+        <input
+          className={inputClass}
+          placeholder="שם השחקן (למשל מוסיאלה)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <select
+          className={inputClass}
+          value={teamId}
+          onChange={(e) => setTeamId(e.target.value)}
+          required
+        >
+          <option value="">בחר קבוצה / מנג'ר</option>
+          {players.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} — {p.team_name}
+            </option>
+          ))}
+        </select>
+        <div className="flex gap-2">
+          <button className={`${btnPrimary} flex-1`} disabled={save.isPending}>
+            {editing ? "עדכן שחקן" : "הוסף שחקן"}
+          </button>
+          {editing && (
+            <button type="button" className={btnGhost} onClick={reset}>
+              ביטול
+            </button>
+          )}
+        </div>
+      </form>
+
+      <div className="grid gap-2 md:grid-cols-2">
+        {squadPlayers.map((sp) => {
+          const team = teamById.get(sp.team_id);
+          return (
+            <div
+              key={sp.id}
+              className="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-3 py-2"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold">{sp.name}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {team ? `${team.name} — ${team.team_name}` : "ללא קבוצה"}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  className={btnGhost}
+                  onClick={() => {
+                    setEditing(sp);
+                    setName(sp.name);
+                    setTeamId(sp.team_id);
+                  }}
+                >
+                  עריכה
+                </button>
+                <button
+                  className="rounded-xl bg-destructive/20 px-3 py-1.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/30"
+                  onClick={() => remove.mutate(sp.id)}
+                >
+                  מחיקה
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        {squadPlayers.length === 0 && (
+          <p className="text-sm text-muted-foreground">עדיין לא נוספו שחקני סגל.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function MatchesSection({
   players,
   matches,
   stats,
+  squadPlayers,
+  squadStats,
   onChanged,
 }: {
   players: Player[];
   matches: Match[];
   stats: { match_id: string; player_id: string; goals: number; assists: number }[];
+  squadPlayers: SquadPlayer[];
+  squadStats: SquadStatRow[];
   onChanged: () => void;
 }) {
   const [phase, setPhase] = useState("regular");
@@ -373,6 +533,8 @@ function MatchesSection({
               home={byId.get(m.home_player_id)}
               away={byId.get(m.away_player_id)}
               stats={stats.filter((s) => s.match_id === m.id)}
+              squadPlayers={squadPlayers}
+              squadStats={squadStats.filter((s) => s.match_id === m.id)}
               onChanged={onChanged}
               onDelete={() => remove.mutate(m.id)}
             />
@@ -388,6 +550,8 @@ function MatchRow({
   home,
   away,
   stats,
+  squadPlayers,
+  squadStats,
   onChanged,
   onDelete,
 }: {
@@ -395,6 +559,8 @@ function MatchRow({
   home: Player | undefined;
   away: Player | undefined;
   stats: { player_id: string; goals: number; assists: number }[];
+  squadPlayers: SquadPlayer[];
+  squadStats: SquadStatRow[];
   onChanged: () => void;
   onDelete: () => void;
 }) {
@@ -406,6 +572,24 @@ function MatchRow({
   const [ha, setHa] = useState(String(homeStat?.assists ?? 0));
   const [ag, setAg] = useState(String(awayStat?.goals ?? 0));
   const [aa, setAa] = useState(String(awayStat?.assists ?? 0));
+
+  const matchSquad = squadPlayers.filter(
+    (sp) => sp.team_id === match.home_player_id || sp.team_id === match.away_player_id,
+  );
+  const [squadValues, setSquadValues] = useState<Record<string, { goals: string; assists: string }>>(
+    () =>
+      Object.fromEntries(
+        matchSquad.map((sp) => {
+          const row = squadStats.find((s) => s.squad_player_id === sp.id);
+          return [sp.id, { goals: String(row?.goals ?? 0), assists: String(row?.assists ?? 0) }];
+        }),
+      ),
+  );
+  const setSquadValue = (id: string, key: "goals" | "assists", value: string) =>
+    setSquadValues((prev) => ({
+      ...prev,
+      [id]: { goals: "0", assists: "0", ...prev[id], [key]: value },
+    }));
 
   const num = (v: string) => Math.max(0, Number(v) || 0);
 
@@ -421,6 +605,11 @@ function MatchRow({
             { player_id: match.home_player_id, goals: num(hg), assists: num(ha) },
             { player_id: match.away_player_id, goals: num(ag), assists: num(aa) },
           ],
+          squadStats: matchSquad.map((sp) => ({
+            squad_player_id: sp.id,
+            goals: num(squadValues[sp.id]?.goals ?? "0"),
+            assists: num(squadValues[sp.id]?.assists ?? "0"),
+          })),
         },
       }),
     onSuccess: () => {
@@ -468,6 +657,29 @@ function MatchRow({
           </div>
         </div>
       </div>
+
+      {matchSquad.length > 0 && (
+        <div className="mt-4 space-y-2 rounded-xl bg-secondary/20 p-3">
+          <p className="text-xs font-bold text-muted-foreground">שערים ובישולים של שחקני הסגל</p>
+          {matchSquad.map((sp) => (
+            <div key={sp.id} className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="min-w-28 font-semibold">{sp.name}</span>
+              <span className="text-muted-foreground">כבש</span>
+              <input
+                className={miniInput}
+                value={squadValues[sp.id]?.goals ?? "0"}
+                onChange={(e) => setSquadValue(sp.id, "goals", e.target.value)}
+              />
+              <span className="text-muted-foreground">בישל</span>
+              <input
+                className={miniInput}
+                value={squadValues[sp.id]?.assists ?? "0"}
+                onChange={(e) => setSquadValue(sp.id, "assists", e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button
