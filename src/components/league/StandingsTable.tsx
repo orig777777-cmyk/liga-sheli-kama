@@ -51,9 +51,9 @@ export function StandingsTable({
           {rows.map((row, i) => {
             const player = byId.get(row.player_id);
             const accentClass =
-              i === rows.length - 1
+              i >= 4
                 ? "border-r-4 border-r-destructive/80"
-                : i >= 3 && i <= 4
+                : i <= 3
                   ? "border-r-4 border-r-primary/80"
                   : "";
             return (
