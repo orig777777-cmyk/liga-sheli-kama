@@ -59,7 +59,7 @@ export function StandingsTable({
             return (
               <tr
                 key={row.player_id}
-                className={`border-b border-border/40 transition-colors last:border-0 hover:bg-secondary/40 ${accentClass}`}
+                className={`border-b border-border/40 transition-colors last:border-b-0 hover:bg-secondary/40 ${accentClass}`}
               >
                 <td className="px-3 py-3">
                   <span
