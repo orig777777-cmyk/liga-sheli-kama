@@ -53,7 +53,7 @@ export function StandingsTable({
             const accentClass =
               i === rows.length - 1
                 ? "border-r-4 border-r-destructive/80"
-                : i >= 3 && i <= 6
+                : i >= 3 && i <= 4
                   ? "border-r-4 border-r-primary/80"
                   : "";
             return (
