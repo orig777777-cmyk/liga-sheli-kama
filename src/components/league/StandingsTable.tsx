@@ -50,10 +50,16 @@ export function StandingsTable({
         <tbody>
           {rows.map((row, i) => {
             const player = byId.get(row.player_id);
+            const accentClass =
+              i === rows.length - 1
+                ? "border-r-4 border-r-destructive/80"
+                : i >= 3 && i <= 6
+                  ? "border-r-4 border-r-primary/80"
+                  : "";
             return (
               <tr
                 key={row.player_id}
-                className="border-b border-border/40 transition-colors last:border-0 hover:bg-secondary/40"
+                className={`border-b border-border/40 transition-colors last:border-0 hover:bg-secondary/40 ${accentClass}`}
               >
                 <td className="px-3 py-3">
                   <span
