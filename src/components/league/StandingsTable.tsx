@@ -53,13 +53,13 @@ export function StandingsTable({
             const accentClass =
               i === rows.length - 1
                 ? "border-r-4 border-r-destructive/80"
-                : i >= 3 && i <= 6
+                : i >= 3 && i <= 4
                   ? "border-r-4 border-r-primary/80"
                   : "";
             return (
               <tr
                 key={row.player_id}
-                className={`border-b border-border/40 transition-colors last:border-0 hover:bg-secondary/40 ${accentClass}`}
+                className={`border-b border-border/40 transition-colors last:border-b-0 hover:bg-secondary/40 ${accentClass}`}
               >
                 <td className="px-3 py-3">
                   <span
