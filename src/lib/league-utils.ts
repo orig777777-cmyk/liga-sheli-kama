@@ -77,17 +77,23 @@ export function computeStandings(
         ),
       )
     : players;
+  // בפלייאוף — ממשיכים מהנקודות של העונה הסדירה
+  const carry =
+    phase === "upper" || phase === "lower"
+      ? new Map(computeStandings(players, matches, "regular").map((r) => [r.player_id, r]))
+      : null;
   for (const p of pool) {
+    const base = carry?.get(p.id);
     table.set(p.id, {
       player_id: p.id,
-      played: 0,
-      wins: 0,
-      draws: 0,
-      losses: 0,
-      gf: 0,
-      ga: 0,
+      played: base?.played ?? 0,
+      wins: base?.wins ?? 0,
+      draws: base?.draws ?? 0,
+      losses: base?.losses ?? 0,
+      gf: base?.gf ?? 0,
+      ga: base?.ga ?? 0,
       gd: 0,
-      points: 0,
+      points: base?.points ?? 0,
     });
   }
   for (const m of matches) {
