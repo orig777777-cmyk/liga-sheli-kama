@@ -159,6 +159,30 @@ export const deleteMatch = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+export const createMatch = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: {
+      home_player_id: string;
+      away_player_id: string;
+      round_number: number;
+      phase: string;
+    }) => data,
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    if (data.home_player_id === data.away_player_id) throw new Error("צריך שתי קבוצות שונות");
+    const db = await admin();
+    const { error } = await db.from("matches").insert({
+      home_player_id: data.home_player_id,
+      away_player_id: data.away_player_id,
+      round_number: data.round_number,
+      phase: data.phase,
+      status: "upcoming",
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
 export const generateRegularSeason = createServerFn({ method: "POST" }).handler(async () => {
   await requireAdmin();
   const db = await admin();

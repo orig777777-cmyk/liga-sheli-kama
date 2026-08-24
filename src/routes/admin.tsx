@@ -9,7 +9,7 @@ import {
   adminLogout,
   deleteMatch,
   deletePlayer,
-  generatePlayoffs,
+  createMatch,
   generateRegularSeason,
   getAdminStatus,
   getLeague,
@@ -155,15 +155,6 @@ function Dashboard() {
     onError: () => toast.error("יצירת המחזורים נכשלה"),
   });
 
-  const genPlayoffs = useMutation({
-    mutationFn: () => generatePlayoffs(),
-    onSuccess: (r) => {
-      toast.success(`נוצרו ${r.created} משחקי פלייאוף`);
-      refresh();
-    },
-    onError: () => toast.error("יצירת הפלייאוף נכשלה"),
-  });
-
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl space-y-8 px-4 pb-20 pt-8">
       <header className="surface-card flex flex-wrap items-center justify-between gap-4 p-6">
@@ -191,18 +182,13 @@ function Dashboard() {
           >
             צור מחזורי ליגה (כולם נגד כולם)
           </button>
-          <button
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-bold text-accent-foreground transition-transform hover:scale-[1.03] disabled:opacity-50"
-            disabled={genPlayoffs.isPending}
-            onClick={() => genPlayoffs.mutate()}
-          >
-            פיצול לפלייאוף עליון ותחתון
-          </button>
         </div>
         <p className="text-xs text-muted-foreground">
           שים לב: יצירת מחזורים מחדש מוחקת את משחקי העונה הסדירה הקיימים.
         </p>
       </section>
+
+      <CreateMatchSection players={players} matches={matches} onChanged={refresh} />
 
       <PlayersSection players={players} onChanged={refresh} />
       <SquadSection players={players} squadPlayers={squadPlayers} onChanged={refresh} />
@@ -215,6 +201,92 @@ function Dashboard() {
         onChanged={refresh}
       />
     </main>
+  );
+}
+
+function CreateMatchSection({
+  players,
+  matches,
+  onChanged,
+}: {
+  players: Player[];
+  matches: Match[];
+  onChanged: () => void;
+}) {
+  const [phase, setPhase] = useState("upper");
+  const [home, setHome] = useState("");
+  const [away, setAway] = useState("");
+  const [round, setRound] = useState("1");
+
+  const create = useMutation({
+    mutationFn: () =>
+      createMatch({
+        data: {
+          home_player_id: home,
+          away_player_id: away,
+          round_number: Number(round) || 1,
+          phase,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("המשחק נוצר");
+      setHome("");
+      setAway("");
+      onChanged();
+    },
+    onError: (e: Error) => toast.error(e.message || "יצירת המשחק נכשלה"),
+  });
+
+  const countInPhase = matches.filter((m) => m.phase === phase).length;
+
+  return (
+    <section className="surface-card space-y-4 p-6">
+      <h2 className="font-display text-2xl tracking-wide">יצירת משחק ידנית</h2>
+      <p className="text-xs text-muted-foreground">
+        טבלאות הפלייאוף העליון והתחתון ממשיכות מהנקודות של העונה הסדירה. כרגע יש {countInPhase}{" "}
+        משחקים בשלב הנבחר.
+      </p>
+      <div className="grid gap-3 md:grid-cols-5">
+        <select className={inputClass} value={phase} onChange={(e) => setPhase(e.target.value)}>
+          {["regular", "upper", "lower"].map((p) => (
+            <option key={p} value={p}>
+              {PHASE_LABELS[p]}
+            </option>
+          ))}
+        </select>
+        <select className={inputClass} value={home} onChange={(e) => setHome(e.target.value)}>
+          <option value="">קבוצה ביתית</option>
+          {players.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} — {p.team_name}
+            </option>
+          ))}
+        </select>
+        <select className={inputClass} value={away} onChange={(e) => setAway(e.target.value)}>
+          <option value="">קבוצה אורחת</option>
+          {players.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} — {p.team_name}
+            </option>
+          ))}
+        </select>
+        <input
+          className={inputClass}
+          type="number"
+          min={1}
+          value={round}
+          onChange={(e) => setRound(e.target.value)}
+          placeholder="מחזור"
+        />
+        <button
+          className={btnPrimary}
+          disabled={!home || !away || home === away || create.isPending}
+          onClick={() => create.mutate()}
+        >
+          הוסף משחק
+        </button>
+      </div>
+    </section>
   );
 }
 
