@@ -191,15 +191,6 @@
             const homeTeam = db.teams.find(t => t.id === homeId);
             const awayTeam = db.teams.find(t => t.id === awayId);
 
-            // Update team stats
-            homeTeam.played++;
-            awayTeam.played++;
-            homeTeam.gf += homeGoals;
-            homeTeam.ga += awayGoals;
-            awayTeam.gf += awayGoals; // wait, awayTeam.ga += homeGoals, awayTeam.gf += awayGoals
-            // Correcting team stats calculation:
-            // Let's reset and recalculate all team stats from matches list for total accuracy!
-            
             db.matches.push({
                 id: Date.now(),
                 homeId,
@@ -283,8 +274,8 @@
                                 ⚽ ${p.goals} | 🎯 ${p.assists}
                             </div>
                             <div class="flex items-center gap-1">
-                                <button onclick="updateStats(${p.id}, ${team.id}, 'goals', 1)" title="הוסף שער" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition">+שער</button>
-                                <button onclick="updateStats(${p.id}, ${team.id}, 'assists', 1)" title="הוסף בישול" class="bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600 hover:text-white w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition">+בישול</button>
+                                <button onclick="updateStats(${p.id}, ${team.id}, 'goals', 1)" title="הוסף שער" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-2 py-0.5 rounded font-bold text-xs transition">+שער</button>
+                                <button onclick="updateStats(${p.id}, ${team.id}, 'assists', 1)" title="הוסף בישול" class="bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600 hover:text-white px-2 py-0.5 rounded font-bold text-xs transition">+בישול</button>
                                 <button onclick="setCaptain(${team.id}, ${p.id})" title="קבע כקפטן" class="bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-slate-950 px-2 py-0.5 rounded font-bold text-xs transition">C</button>
                             </div>
                         </div>
