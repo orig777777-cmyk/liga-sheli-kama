@@ -289,7 +289,9 @@ export const coachLogin = createServerFn({ method: "POST" })
 
 export const coachLogout = createServerFn({ method: "POST" }).handler(async () => {
   const session = await getSession();
-  await session.update({ ...session.data, coachTeamId: undefined, coachUsername: undefined });
+  const { coachTeamId: _t, coachUsername: _u, ...rest } = session.data;
+  await session.clear();
+  if (rest.isAdmin) await session.update(rest);
   return { ok: true as const };
 });
 
