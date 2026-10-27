@@ -40,7 +40,7 @@ function Board({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold">{row.squadPlayer.name}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {row.team ? `${row.team.name} · ${row.team.team_name}` : "ללא קבוצה"}
+                    {row.team ? `${row.team.team_name} · ${row.team.name}` : "ללא קבוצה"}
                   </p>
                 </div>
               </div>

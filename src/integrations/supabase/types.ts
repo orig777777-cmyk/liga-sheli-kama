@@ -35,6 +35,93 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_users: {
+        Row: {
+          created_at: string
+          id: string
+          password_hash: string
+          team_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password_hash: string
+          team_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password_hash?: string
+          team_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_users_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_lineups: {
+        Row: {
+          id: string
+          is_captain: boolean
+          match_id: string
+          position: string
+          role: string
+          sort_order: number
+          squad_player_id: string
+          team_id: string
+        }
+        Insert: {
+          id?: string
+          is_captain?: boolean
+          match_id: string
+          position?: string
+          role?: string
+          sort_order?: number
+          squad_player_id: string
+          team_id: string
+        }
+        Update: {
+          id?: string
+          is_captain?: boolean
+          match_id?: string
+          position?: string
+          role?: string
+          sort_order?: number
+          squad_player_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_lineups_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_lineups_squad_player_id_fkey"
+            columns: ["squad_player_id"]
+            isOneToOne: false
+            referencedRelation: "squad_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_lineups_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_stats: {
         Row: {
           assists: number
@@ -124,6 +211,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      news: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
       }
       players: {
         Row: {
@@ -222,9 +330,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      upsert_coach: {
+        Args: { _password: string; _team_id: string; _username: string }
+        Returns: undefined
+      }
       verify_admin_login: {
         Args: { _password: string; _username: string }
         Returns: boolean
+      }
+      verify_coach_login: {
+        Args: { _password: string; _username: string }
+        Returns: string
       }
     }
     Enums: {

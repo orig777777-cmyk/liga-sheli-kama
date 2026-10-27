@@ -19,13 +19,15 @@ export function PlayerBadge({
             loading="lazy"
           />
         ) : (
-          (player.name || "?").slice(0, 2)
+          (player.team_name || player.name || "?").slice(0, 2)
         )}
       </span>
       <span className="min-w-0">
-        <span className="block truncate font-semibold leading-tight">{player.name}</span>
-        {!compact && (
-          <span className="block truncate text-xs text-muted-foreground">{player.team_name}</span>
+        <span className="block truncate font-semibold leading-tight">
+          {player.team_name || player.name}
+        </span>
+        {!compact && player.team_name && (
+          <span className="block truncate text-xs text-muted-foreground">{player.name}</span>
         )}
       </span>
     </div>

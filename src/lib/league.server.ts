@@ -1,10 +1,15 @@
 import { useSession } from "@tanstack/react-start/server";
 
-import type { Match, Player, SquadPlayer, SquadStatRow, StatRow } from "./league-utils";
+import type { LineupRow, Match, NewsItem, Player, SquadPlayer, SquadStatRow, StatRow } from "./league-utils";
 
 export { computeStandings, roundRobin } from "./league-utils";
 
-export type AdminSession = { isAdmin?: boolean; username?: string };
+export type AdminSession = {
+  isAdmin?: boolean;
+  username?: string;
+  coachTeamId?: string;
+  coachUsername?: string;
+};
 
 export function sessionConfig() {
   return {
@@ -30,6 +35,12 @@ export async function requireAdmin() {
   return session;
 }
 
+export async function requireCoach() {
+  const session = await getSession();
+  if (!session.data.coachTeamId) throw new Error("UNAUTHORIZED");
+  return session.data.coachTeamId;
+}
+
 export async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
@@ -37,7 +48,7 @@ export async function admin() {
 
 export async function loadLeague() {
   const db = await admin();
-  const [players, matches, stats, squadPlayers, squadStats] = await Promise.all([
+  const [players, matches, stats, squadPlayers, squadStats, lineups, news] = await Promise.all([
     db.from("players").select("id,name,team_name,logo_url").order("created_at"),
     db
       .from("matches")
@@ -46,6 +57,11 @@ export async function loadLeague() {
     db.from("match_stats").select("id,match_id,player_id,goals,assists"),
     db.from("squad_players").select("id,team_id,name").order("created_at"),
     db.from("squad_match_stats").select("id,match_id,squad_player_id,goals,assists"),
+    db
+      .from("match_lineups")
+      .select("id,match_id,team_id,squad_player_id,role,position,is_captain,sort_order")
+      .order("sort_order"),
+    db.from("news").select("id,title,body,created_at").order("created_at", { ascending: false }).limit(30),
   ]);
   return {
     players: (players.data ?? []) as Player[],
@@ -53,5 +69,7 @@ export async function loadLeague() {
     stats: (stats.data ?? []) as StatRow[],
     squadPlayers: (squadPlayers.data ?? []) as SquadPlayer[],
     squadStats: (squadStats.data ?? []) as SquadStatRow[],
+    lineups: (lineups.data ?? []) as LineupRow[],
+    news: (news.data ?? []) as NewsItem[],
   };
 }

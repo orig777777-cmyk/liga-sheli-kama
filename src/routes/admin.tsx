@@ -25,6 +25,7 @@ import {
   type SquadStatRow,
 } from "@/lib/league-utils";
 import { saveMatchResult } from "@/lib/league.functions";
+import { CoachesSection, NewsSection } from "@/components/league/AdminExtras";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -192,6 +193,8 @@ function Dashboard() {
 
       <PlayersSection players={players} onChanged={refresh} />
       <SquadSection players={players} squadPlayers={squadPlayers} onChanged={refresh} />
+      <CoachesSection players={players} />
+      <NewsSection news={data?.news ?? []} onChanged={refresh} />
       <MatchesSection
         players={players}
         matches={matches}
@@ -258,7 +261,7 @@ function CreateMatchSection({
           <option value="">קבוצה ביתית</option>
           {players.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name} — {p.team_name}
+              {p.team_name} — {p.name}
             </option>
           ))}
         </select>
@@ -266,7 +269,7 @@ function CreateMatchSection({
           <option value="">קבוצה אורחת</option>
           {players.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name} — {p.team_name}
+              {p.team_name} — {p.name}
             </option>
           ))}
         </select>
@@ -332,7 +335,7 @@ function PlayersSection({ players, onChanged }: { players: Player[]; onChanged: 
 
   return (
     <section className="surface-card space-y-5 p-6">
-      <h2 className="font-display text-2xl tracking-wide">ניהול שחקנים וקבוצות</h2>
+      <h2 className="font-display text-2xl tracking-wide">ניהול קבוצות</h2>
 
       <form
         className="grid gap-3 md:grid-cols-4"
@@ -343,16 +346,16 @@ function PlayersSection({ players, onChanged }: { players: Player[]; onChanged: 
       >
         <input
           className={inputClass}
-          placeholder="שם השחקן"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          placeholder="שם הקבוצה (למשל נאפולי)"
+          value={team}
+          onChange={(e) => setTeam(e.target.value)}
           required
         />
         <input
           className={inputClass}
-          placeholder="שם הקבוצה"
-          value={team}
-          onChange={(e) => setTeam(e.target.value)}
+          placeholder="שם השחקן שמשחק בקבוצה"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
         />
         <input
@@ -363,7 +366,7 @@ function PlayersSection({ players, onChanged }: { players: Player[]; onChanged: 
         />
         <div className="flex gap-2">
           <button className={`${btnPrimary} flex-1`} disabled={save.isPending}>
-            {editing ? "עדכן שחקן" : "הוסף שחקן"}
+            {editing ? "עדכן קבוצה" : "הוסף קבוצה"}
           </button>
           {editing && (
             <button type="button" className={btnGhost} onClick={reset}>
@@ -488,7 +491,7 @@ function SquadSection({
           <option value="">בחר קבוצה / מנג'ר</option>
           {players.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name} — {p.team_name}
+              {p.team_name} — {p.name}
             </option>
           ))}
         </select>

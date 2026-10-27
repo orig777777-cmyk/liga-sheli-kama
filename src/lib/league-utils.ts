@@ -178,3 +178,42 @@ export function squadLeaderboard(
     .filter((r) => r.total > 0)
     .sort((a, b) => b.total - a.total);
 }
+
+export type LineupRow = {
+  id: string;
+  match_id: string;
+  team_id: string;
+  squad_player_id: string;
+  role: string; // starter | bench
+  position: string; // GK | DEF | MID | ATT
+  is_captain: boolean;
+  sort_order: number;
+};
+
+export type NewsItem = { id: string; title: string; body: string; created_at: string };
+
+export const POSITIONS = ["GK", "DEF", "MID", "ATT"] as const;
+export const POSITION_LABELS: Record<string, string> = {
+  GK: "שוער",
+  DEF: "הגנה",
+  MID: "קישור",
+  ATT: "התקפה",
+};
+export const STARTERS_COUNT = 11;
+export const BENCH_MAX = 9;
+
+/** Validates a lineup: exactly 11 starters, up to 9 bench, one GK, a captain among starters. */
+export function validateLineup(
+  entries: { squad_player_id: string; role: string; position: string; is_captain: boolean }[],
+): string | null {
+  const starters = entries.filter((e) => e.role === "starter");
+  const bench = entries.filter((e) => e.role === "bench");
+  if (starters.length !== STARTERS_COUNT) return `צריך בדיוק ${STARTERS_COUNT} שחקנים בהרכב`;
+  if (bench.length > BENCH_MAX) return `מקסימום ${BENCH_MAX} שחקנים בספסל`;
+  if (starters.filter((e) => e.position === "GK").length !== 1) return "צריך שוער אחד בדיוק בהרכב";
+  const caps = entries.filter((e) => e.is_captain);
+  if (caps.length !== 1 || caps[0]!.role !== "starter") return "יש לבחור קפטן אחד מתוך ההרכב";
+  if (new Set(entries.map((e) => e.squad_player_id)).size !== entries.length)
+    return "שחקן מופיע פעמיים";
+  return null;
+}
