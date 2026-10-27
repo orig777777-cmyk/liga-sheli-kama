@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ליגת 1v1 FIFA - ניהול מתקדם</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Heebo', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl font-black bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                🏆 ליגת 1v1 FIFA הרשמית
+            </h1>
+            <div class="flex gap-2 flex-wrap justify-center">
+                <button onclick="switchTab('teams')" id="tab-btn-teams" class="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold transition hover:bg-emerald-500">קבוצות וסגלים</button>
+                <button onclick="switchTab('matches')" id="tab-btn-matches" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-bold transition hover:bg-slate-700">ניהול משחקים</button>
+                <button onclick="switchTab('standings')" id="tab-btn-standings" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-bold transition hover:bg-slate-700">טבלה וסטטיסטיקה</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- TAB 1: Teams & Squads -->
+        <section id="section-teams" class="space-y-8">
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+                <h2 class="text-xl font-bold mb-4 text-emerald-400">➕ יצירת קבוצה חדשה</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" id="new-team-name" placeholder="שם הקבוצה (למשל: נאפולי)" class="bg-slate-950 border border-slate-700 px-4 py-2.5 rounded-xl focus:outline-none focus:border-emerald-500">
+                    <input type="text" id="new-coach-name" placeholder="שם המאמן (משתמש)" class="bg-slate-950 border border-slate-700 px-4 py-2.5 rounded-xl focus:outline-none focus:border-emerald-500">
+                    <button onclick="createTeam()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition shadow-lg shadow-emerald-900/20">צור קבוצה</button>
+                </div>
+            </div>
+
+            <div id="teams-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Dynamically rendered teams -->
+            </div>
+        </section>
+
+        <!-- TAB 2: Matches -->
+        <section id="section-matches" class="hidden space-y-8">
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+                <h2 class="text-xl font-bold mb-4 text-emerald-400">⚽ רישום תוצאת משחק</h2>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                    <select id="match-home-team" class="bg-slate-950 border border-slate-700 px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500"></select>
+                    <input type="number" id="match-home-goals" placeholder="שערים" min="0" class="bg-slate-950 border border-slate-700 px-4 py-3 text-center rounded-xl font-bold">
+                    <div class="text-center font-black text-slate-500 text-xl">VS</div>
+                    <input type="number" id="match-away-goals" placeholder="שערים" min="0" class="bg-slate-950 border border-slate-700 px-4 py-3 text-center rounded-xl font-bold">
+                    <select id="match-away-team" class="bg-slate-950 border border-slate-700 px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500"></select>
+                </div>
+                <button onclick="recordMatch()" class="mt-4 w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-cyan-900/20">שמור תוצאת משחק ועדכן טבלה</button>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+                <h2 class="text-xl font-bold mb-4 text-slate-300">📋 היסטוריית משחקים</h2>
+                <div id="matches-history" class="space-y-3">
+                    <p class="text-slate-500 text-sm">טרם שחקו משחקים בליגה.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: Standings & Stats -->
+        <section id="section-standings" class="hidden space-y-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl overflow-x-auto">
+                <h2 class="text-xl font-bold mb-4 text-emerald-400">📊 טבלת הליגה</h2>
+                <table class="w-full text-right">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 text-sm">
+                            <th class="py-3 px-4">קבוצה</th>
+                            <th class="py-3 px-4">משחקים</th>
+                            <th class="py-3 px-4">ניצחונות</th>
+                            <th class="py-3 px-4">תיקו</th>
+                            <th class="py-3 px-4">הפסדים</th>
+                            <th class="py-3 px-4">הפרש</th>
+                            <th class="py-3 px-4">נקודות</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standings-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <h2 class="text-xl font-bold mb-4 text-cyan-400">⚽ מלך השערים</h2>
+                    <div id="top-scorers" class="space-y-3"></div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <h2 class="text-xl font-bold mb-4 text-cyan-400">🎯 מלך הבישולים</h2>
+                    <div id="top-assists" class="space-y-3"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        let db = JSON.parse(localStorage.getItem('fifa_league_v2')) || {
+            teams: [],
+            matches: []
+        };
+
+        function saveAndRender() {
+            localStorage.setItem('fifa_league_v2', JSON.stringify(db));
+            render();
+        }
+
+        function switchTab(tabName) {
+            ['teams', 'matches', 'standings'].forEach(t => {
+                document.getElementById(`section-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).className = 'px-4 py-2 bg-slate-800 text-slate-300 rounded-xl font-bold transition hover:bg-slate-700';
+            });
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tabName}`).className = 'px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold transition hover:bg-emerald-500';
+            render();
+        }
+
+        function createTeam() {
+            const nameInput = document.getElementById('new-team-name');
+            const coachInput = document.getElementById('new-coach-name');
+            const name = nameInput.value.trim();
+            const coach = coachInput.value.trim();
+
+            if (!name || !coach) return alert('נא למלא שם קבוצה ושם מאמן!');
+
+            db.teams.push({
+                id: Date.now(),
+                name,
+                coach,
+                players: [],
+                played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, pts: 0
+            });
+
+            nameInput.value = '';
+            coachInput.value = '';
+            saveAndRender();
+        }
+
+        function addPlayer(teamId) {
+            const nameInput = document.getElementById(`player-name-${teamId}`);
+            const posInput = document.getElementById(`player-pos-${teamId}`);
+            const name = nameInput.value.trim();
+            const position = posInput.value;
+
+            if (!name) return alert('נא להזין שם שחקן!');
+
+            const team = db.teams.find(t => t.id === teamId);
+            team.players.push({
+                id: Date.now() + Math.random(),
+                name,
+                position,
+                goals: 0,
+                assists: 0,
+                isCaptain: false
+            });
+
+            nameInput.value = '';
+            saveAndRender();
+        }
+
+        function setCaptain(teamId, playerId) {
+            const team = db.teams.find(t => t.id === teamId);
+            team.players.forEach(p => p.isCaptain = (p.id === playerId));
+            saveAndRender();
+        }
+
+        function updateStats(playerId, teamId, type, change) {
+            const team = db.teams.find(t => t.id === teamId);
+            const player = team.players.find(p => p.id === playerId);
+            if (player) {
+                player[type] = Math.max(0, player[type] + change);
+                saveAndRender();
+            }
+        }
+
+        function recordMatch() {
+            const homeId = Number(document.getElementById('match-home-team').value);
+            const awayId = Number(document.getElementById('match-away-team').value);
+            const homeGoals = Number(document.getElementById('match-home-goals').value);
+            const awayGoals = Number(document.getElementById('match-away-goals').value);
+
+            if (homeId === awayId) return alert('קבוצה לא יכולה לשחק נגד עצמה!');
+            if (isNaN(homeGoals) || isNaN(awayGoals)) return alert('נא להזין תוצאה תקינה!');
+
+            const homeTeam = db.teams.find(t => t.id === homeId);
+            const awayTeam = db.teams.find(t => t.id === awayId);
+
+            // Update team stats
+            homeTeam.played++;
+            awayTeam.played++;
+            homeTeam.gf += homeGoals;
+            homeTeam.ga += awayGoals;
+            awayTeam.gf += awayGoals; // wait, awayTeam.ga += homeGoals, awayTeam.gf += awayGoals
+            // Correcting team stats calculation:
+            // Let's reset and recalculate all team stats from matches list for total accuracy!
+            
+            db.matches.push({
+                id: Date.now(),
+                homeId,
+                awayId,
+                homeName: homeTeam.name,
+                awayName: awayTeam.name,
+                homeGoals,
+                awayGoals
+            });
+
+            recalculateStandings();
+            document.getElementById('match-home-goals').value = '';
+            document.getElementById('match-away-goals').value = '';
+            saveAndRender();
+        }
+
+        function recalculateStandings() {
+            db.teams.forEach(t => {
+                t.played = 0; t.won = 0; t.drawn = 0; t.lost = 0; t.gf = 0; t.ga = 0; t.pts = 0;
+            });
+
+            db.matches.forEach(m => {
+                const home = db.teams.find(t => t.id === m.homeId);
+                const away = db.teams.find(t => t.id === m.awayId);
+                if (!home || !away) return;
+
+                home.played++;
+                away.played++;
+                home.gf += m.homeGoals;
+                home.ga += m.awayGoals;
+                away.gf += m.awayGoals;
+                away.ga += m.homeGoals;
+
+                if (m.homeGoals > m.awayGoals) {
+                    home.won++;
+                    home.pts += 3;
+                    away.lost++;
+                } else if (m.homeGoals < m.awayGoals) {
+                    away.won++;
+                    away.pts += 3;
+                    home.lost++;
+                } else {
+                    home.drawn++;
+                    away.drawn++;
+                    home.pts += 1;
+                    away.pts += 1;
+                }
+            });
+        }
+
+        function render() {
+            // Populate Selects for Matches
+            const homeSelect = document.getElementById('match-home-team');
+            const awaySelect = document.getElementById('match-away-team');
+            homeSelect.innerHTML = '';
+            awaySelect.innerHTML = '';
+
+            db.teams.forEach(t => {
+                homeSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+                awaySelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+            });
+
+            // Render Teams & Squads
+            const teamsContainer = document.getElementById('teams-container');
+            teamsContainer.innerHTML = '';
+
+            const posOrder = { 'שוער': 1, 'הגנה': 2, 'קישור': 3, 'התקפה': 4 };
+
+            db.teams.forEach(team => {
+                const sortedPlayers = [...team.players].sort((a, b) => (posOrder[a.position] || 9) - (posOrder[b.position] || 9));
+
+                let playersHtml = sortedPlayers.map(p => `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-950 p-3 rounded-xl border border-slate-800 gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs px-2 py-0.5 bg-slate-800 text-slate-300 rounded-md font-medium">${p.position}</span>
+                            <span class="font-bold text-slate-200">${p.name}</span>
+                            ${p.isCaptain ? '<span class="bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded font-black text-xs shadow">C</span>' : ''}
+                        </div>
+                        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                            <div class="text-xs text-slate-400">
+                                ⚽ ${p.goals} | 🎯 ${p.assists}
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button onclick="updateStats(${p.id}, ${team.id}, 'goals', 1)" title="הוסף שער" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition">+שער</button>
+                                <button onclick="updateStats(${p.id}, ${team.id}, 'assists', 1)" title="הוסף בישול" class="bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600 hover:text-white w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition">+בישול</button>
+                                <button onclick="setCaptain(${team.id}, ${p.id})" title="קבע כקפטן" class="bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-slate-950 px-2 py-0.5 rounded font-bold text-xs transition">C</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                teamsContainer.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                            <div>
+                                <h3 class="text-xl font-bold text-emerald-400">${team.name}</h3>
+                                <p class="text-xs text-slate-400">מאמן: <span class="text-slate-200 font-semibold">${team.coach}</span></p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                            ${playersHtml || '<p class="text-slate-500 text-sm text-center py-4">אין שחקנים בקבוצה זו עדיין.</p>'}
+                        </div>
+                        <div class="flex gap-2 pt-2 border-t border-slate-800">
+                            <input type="text" id="player-name-${team.id}" placeholder="שם שחקן חדש" class="bg-slate-950 border border-slate-700 px-3 py-2 text-sm rounded-xl flex-1 focus:outline-none focus:border-emerald-500">
+                            <select id="player-pos-${team.id}" class="bg-slate-950 border border-slate-700 text-sm px-3 py-2 rounded-xl focus:outline-none focus:border-emerald-500">
+                                <option value="שוער">שוער</option>
+                                <option value="הגנה">הגנה</option>
+                                <option value="קישור">קישור</option>
+                                <option value="התקפה">התקפה</option>
+                            </select>
+                            <button onclick="addPlayer(${team.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded-xl font-bold transition">הוסף</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Render Standings
+            recalculateStandings();
+            const sortedTeams = [...db.teams].sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga));
+            const standingsTbody = document.getElementById('standings-tbody');
+            standingsTbody.innerHTML = sortedTeams.map((t, idx) => `
+                <tr class="border-b border-slate-800/60 hover:bg-slate-850/50 transition">
+                    <td class="py-3 px-4 font-bold text-emerald-400 flex items-center gap-2">
+                        <span class="text-xs text-slate-500 w-5">#${idx + 1}</span>
+                        ${t.name} <span class="text-xs text-slate-500 font-normal">(${t.coach})</span>
+                    </td>
+                    <td class="py-3 px-4">${t.played}</td>
+                    <td class="py-3 px-4">${t.won}</td>
+                    <td class="py-3 px-4">${t.drawn}</td>
+                    <td class="py-3 px-4">${t.lost}</td>
+                    <td class="py-3 px-4">${t.gf - t.ga}</td>
+                    <td class="py-3 px-4 font-black text-cyan-400 text-base">${t.pts}</td>
+                </tr>
+            `).join('') || `<tr><td colspan="7" class="text-center text-slate-500 py-4">אין נתונים בטבלה עדיין.</td></tr>`;
+
+            // Render Top Scorers & Assists
+            let allPlayers = [];
+            db.teams.forEach(t => t.players.forEach(p => allPlayers.push({ ...p, teamName: t.name })));
+
+            const topScorers = [...allPlayers].sort((a, b) => b.goals - a.goals).slice(0, 5);
+            document.getElementById('top-scorers').innerHTML = topScorers.map((p, idx) => `
+                <div class="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="font-bold text-sm">${idx + 1}. ${p.name} <span class="text-xs text-slate-500 font-normal">(${p.teamName})</span></span>
+                    <span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg font-bold text-xs">${p.goals} שערים</span>
+                </div>
+            `).join('') || '<p class="text-slate-500 text-sm text-center py-2">אין נתונים עדיין</p>';
+
+            const topAssists = [...allPlayers].sort((a, b) => b.assists - a.assists).slice(0, 5);
+            document.getElementById('top-assists').innerHTML = topAssists.map((p, idx) => `
+                <div class="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="font-bold text-sm">${idx + 1}. ${p.name} <span class="text-xs text-slate-500 font-normal">(${p.teamName})</span></span>
+                    <span class="bg-cyan-500/20 text-cyan-400 px-3 py-1 rounded-lg font-bold text-xs">${p.assists} בישולים</span>
+                </div>
+            `).join('') || '<p class="text-slate-500 text-sm text-center py-2">אין נתונים עדיין</p>';
+
+            // Render Matches History
+            const historyContainer = document.getElementById('matches-history');
+            historyContainer.innerHTML = db.matches.slice().reverse().map(m => `
+                <div class="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800 text-sm">
+                    <span class="font-bold text-slate-300">${m.homeName}</span>
+                    <span class="bg-slate-800 px-3 py-1 rounded-lg font-black text-cyan-400">${m.homeGoals} - ${m.awayGoals}</span>
+                    <span class="font-bold text-slate-300">${m.awayName}</span>
+                </div>
+            `).join('') || '<p class="text-slate-500 text-sm">טרם שחקו משחקים בליגה.</p>';
+        }
+
+        render();
+    </script>
+</body>
+</html>
