@@ -53,7 +53,10 @@ export function CoachesSection({ players }: { players: Player[] }) {
         className="grid gap-3 md:grid-cols-4"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!teamId) return toast.error("יש לבחור קבוצה");
+          if (!teamId) {
+            toast.error("יש לבחור קבוצה");
+            return;
+          }
           save.mutate();
         }}
       >
